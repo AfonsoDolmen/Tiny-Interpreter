@@ -16,17 +16,34 @@ Atualmente, a linguagem permite:
 
 ## Como utilizar
 
-1. Edite a variável responsável por armazenar o código-fonte no arquivo principal:
-```
-code = "SEU CÓDIGO AQUI"
+1. Edite o paramêtro da instância de Program em main.py:
+```python
+program = Program("""Seu código aqui""")
 ```
 
-Exemplo
-
+#### 1.1 Exemplo 2:
+```text
 variable x = 10
 write x
-
+```
+```text
 Saída esperada: 10
+```
+
+#### 1.2 Exemplo 2:
+```text
+variable x = 5 + 5
+variable y = 10
+variable result = x * y
+write "O resultado de x * y: "
+write result
+```
+```text
+Saída esperada:
+
+O resultado de x * y:
+100
+```
 
 2. Execute o interpretador:
 ```
@@ -37,9 +54,10 @@ python main.py
 
 ## TODO
 
-- Avaliação baseada em expressões;
+- Avaliação baseada em expressões; ✅
+- Precedência de operadores;
 - Estruturas condicionais simples e compostas (if / else if / else);
-- Refatoração e simplificação da AST;
+- Refatoração e simplificação da AST; ✅
 - Melhor tratamento de erros sintáticos e semânticos;
 - Outros aprimoramentos conforme a evolução do projeto.
 

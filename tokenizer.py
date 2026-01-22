@@ -7,6 +7,7 @@ TOKEN_TYPE = {
     "WRITE": re.compile(r'write', re.IGNORECASE),
     "OP": re.compile(r'op', re.IGNORECASE),
     "NUMBER": re.compile(r'\d+'),
+    "LITERAL": re.compile(r'"[^"]*"'),
     "OPERATOR": re.compile(r'[+\-*/=]'),
     "IDENTIFIER": re.compile(r'[a-zA-Z_]\w*', re.IGNORECASE),
 }
