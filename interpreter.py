@@ -35,78 +35,54 @@ class Interpreter:
 
         # Verifica se a variável já foi criada
         if self.env.get(identifier.name, None):
-            raise NameError(f'{identifier.name} já foi declarada!')
+            raise NameError(
+                f'Variável \"{identifier.name}\" já foi declarada!')
 
         # Realiza a atribuição de acordo com a expressão
-        if isinstance(expression, BinaryOperationNode):
-            self.env[identifier.name] = self.evaluate(expression)
-        elif isinstance(expression, Literal):
-            self.env[identifier.name] = expression.value
+        self.env[identifier.name] = self.evaluate(expression)
 
     def write_statement(self, node: WriteStatementNode):
         """
         Executa a instrução de escrita
         """
-        expression = node.expression
-
-        if isinstance(expression, BinaryOperationNode):
-            print(self.evaluate(expression))
-        elif isinstance(expression, Identifier):
-            if not self.env.get(expression.name, None):
-                raise ValueError(f'Variável {expression.name} não declarada!')
-
-            print(self.env[str(expression.name)])
-        else:
-            print(expression.value)
+        print(self.evaluate(node.expression))
 
     def operation_statement(self, node: BinaryOperationNode):
         """
         Executa a instrução de cálculo
         """
-        left_identifier = None
-
-        result = self.evaluate(node)
-
-        if isinstance(node.left, Identifier):
-            left_identifier = node.left
-
-        if left_identifier:
-            self.env[left_identifier.name] = result
+        return self.evaluate(node)
 
     def evaluate(self, node):
         """
-        Avalia as expressões e retorna o resultado
+        Avalia os tipos e expressões, retorna o valor
         """
-        left = node.left
-        operator = node.operator
-        right = node.right
-
         # Avalia o tipo
-        if isinstance(left, BinaryOperationNode):
-            # Se for uma expressão binária, avalie novamente
-            left = self.evaluate(left)
-        if isinstance(right, BinaryOperationNode):
-            right = self.evaluate(right)
+        if isinstance(node, Literal):
+            return node.value
 
-        # Caso for um identificador
-        if isinstance(left, Identifier):
-            left = self.env[left.name]
-        if isinstance(right, Identifier):
-            right = self.env[right.name]
+        if isinstance(node, Identifier):
+            if node.name in self.env:
+                return self.env[node.name]
+            raise NameError(f'Variável \"{node.name}\" não foi declarada!')
 
-        # Caso for valores
-        if isinstance(left, Literal):
-            left = left.value
+        if isinstance(node, BinaryOperationNode):
+            left = self.evaluate(node.left)
+            operator = node.operator
+            right = self.evaluate(node.right)
 
-        if isinstance(right, Literal):
-            right = right.value
+            # Realiza a operação
+            match operator:
+                case '+': return left + right
+                case '-': return left - right
+                case '*': return left * right
+                case '/':
+                    if right != 0:
+                        return left // right
+                    else:
+                        raise ZeroDivisionError("Divisão por zero!")
 
-        # Realiza a operação
-        match operator:
-            case '+': return left + right
-            case '-': return left - right
-            case '*': return left * right
-            case '/': return left // right
+                case _: raise ValueError(f'Operador {operator} inválido!')
 
         return None
 
@@ -116,13 +92,17 @@ if __name__ == "__main__":
     from tokenizer import Tokenizer
     from parser import Parser
 
-    code = "variable x = 10 op x + 10 write x"
+    code = """
+    variable x = 10
+    write "Teste"
+    write 10 + 5 - 2 * 3
+    """
 
     tokenizer = Tokenizer(code)
     parser = Parser(tokenizer.tokens)
     root = parser.parse_program()
 
-    print(f'\nCódigo fonte: "{code}"\n')
+    print(f'\nCódigo fonte: "\n{code}\n"\n')
     print("Árvore de Sintaxe Abstracta (AST):")
     print(root)
 
