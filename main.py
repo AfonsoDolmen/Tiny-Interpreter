@@ -5,7 +5,6 @@ from interpreter import Interpreter
 
 class Program:
     def __init__(self, source_code: str):
-        self.env = dict()
         self.tokenizer = Tokenizer(source_code)
         self.parser = Parser(self.tokenizer.tokens)
 
@@ -24,19 +23,28 @@ if __name__ == "__main__":
     """
     variables: declara variáveis
     write: imprime valores
-    op: realiza operações aritméticas básicas e atribui o resultado na variável da esquerda (+ - * /)
+    if <expressão> <operador> <expressão> then ... else end
 
     Ex: variable x = 10 variable y = 2 write x write y op x + y
     """
     program = Program(
         """
-        variable x = 5 + 5
-        variable y = 10
-        variable result = x * y
+        write "Bem vindo a minha linguagem!"
 
-        write "O resultado de x * y:"
+        variable x = 10
+        variable y = 10
+        variable result = x * 2
+
+        write "Valor de x: "
+        write x
+        
+        write "Valor de y: "
+        write y
+
+        write "Valor de x * y:"
         write result
-        write "Finalizando..."
+
+        if result > y then write "O resultado é maior que y!" else write "O resultado é menor que y" end
         """
     )
 

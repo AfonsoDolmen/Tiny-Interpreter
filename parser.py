@@ -1,16 +1,23 @@
+from typing import List
+
+from tokenizer import Token
+
 from nodes import (
     MainNode,
     VariableDeclarationNode,
+    AssignmentNode,
     WriteStatementNode,
     BinaryOperationNode,
     Identifier,
     Literal,
+    ConditionalStatementNode,
 )
 
 
 class Parser:
     def __init__(self, tokens):
         self.tokens = tokens
+        self.root = MainNode(nodes=[])
         self.pos = 0
 
     def current_token(self):
@@ -29,6 +36,14 @@ class Parser:
         self.pos += 1
         return token
 
+    def backward(self):
+        """
+        Retrocede o ponteiro para o token anterior
+        """
+        token = self.current_token()
+        self.pos -= 1
+        return token
+
     def excpect(self, token_type):
         """
         Verifica o tipo do token esperado
@@ -41,24 +56,43 @@ class Parser:
 
         return self.advance()
 
+    def expect_any(self, types: List[str]):
+        """
+        Verifica vários tipos de tokens
+        """
+        current_token = self.current_token()
+
+        if current_token.type in types:
+            return self.advance()
+        else:
+            raise SyntaxError(
+                f'Esperado {types}. Mas foi especificado {current_token.type}')
+
     def parse_program(self):
         """
         Inicia o parsing
         """
-        root = MainNode(nodes=[])
-        token = self.current_token()
-
         # Loop principal
         while self.pos < len(self.tokens):
-            token = self.current_token()
-            if token.type == "VARIABLE":
-                root.nodes.append(self.variable_declaration())
-            elif token.type == "WRITE":
-                root.nodes.append(self.write_statement())
-            elif token.type == "OP":
-                root.nodes.append(self.operation_statement())
+            node = self.evaluate_token()
 
-        return root
+            if not isinstance(node, Token):
+                self.root.nodes.append(node)
+
+        return self.root
+
+    def evaluate_token(self):
+        """
+        Avalia o tipo do token
+        """
+        token = self.current_token()
+
+        match token.type:
+            case "VARIABLE": return self.variable_declaration()
+            case "WRITE": return self.write_statement()
+            case "ASSIGN": return self.assign_operator()
+            case 'IF': return self.conditional_statement()
+            case _: return self.advance()
 
     def variable_declaration(self):
         """
@@ -69,7 +103,7 @@ class Parser:
 
         identifier = self.excpect("IDENTIFIER")
 
-        self.excpect("OPERATOR")
+        self.excpect("ASSIGN")
 
         value = self.parse_expression()
 
@@ -91,21 +125,65 @@ class Parser:
             expression=value
         )
 
-    def operation_statement(self):
+    def assign_operator(self):
         """
-        Verifica a gramática de operação
-        op <term> <OPERATOR> <term>
+        Verifica a gramática de atribuição
+
+        <IDENTIFIER> = <EXPRESSION>
         """
-        self.excpect("OP")
+        self.backward()
+        identifier = self.excpect('IDENTIFIER')
 
-        left = self.parse_term()
-        operator = self.excpect("OPERATOR").value
-        right = self.parse_term()
+        self.advance()
 
-        return BinaryOperationNode(
-            left=left,
-            operator=operator,
-            right=right
+        expression = self.parse_expression()
+
+        return AssignmentNode(
+            identifier=Identifier(identifier.value),
+            expression=expression,
+        )
+
+    def conditional_statement(self):
+        """
+        Verifica a gramática de condicionais
+
+        if <EXPRESSION> <OPERATOR> <EXPRESSION> then
+        """
+        # Blocos if/else
+        true_branch = []
+        else_branch = []
+
+        self.excpect('IF')
+
+        left_expr = self.parse_expression()
+        operator = self.expect_any(['EQ', 'NEQ', 'LTE', 'GTE', 'LT', 'GT'])
+        right_expr = self.parse_expression()
+
+        self.excpect('THEN')
+
+        current_branch = true_branch
+
+        # Atribui o nó ao seu bloco responsável
+        while self.current_token().type != 'END':
+            if self.current_token().type == 'ELSE':
+                self.advance()
+                current_branch = else_branch
+                continue
+
+            node = self.evaluate_token()
+
+            if node:
+                current_branch.append(node)
+
+        self.advance()
+
+        # Retorna o nó de estrutura condicional
+        return ConditionalStatementNode(
+            left_expression=left_expr,
+            operator=operator.value,
+            right_expression=right_expr,
+            then_branch=true_branch,
+            else_branch=else_branch if else_branch else None,
         )
 
     def parse_expression(self):
@@ -153,7 +231,7 @@ class Parser:
 if __name__ == "__main__":
     from tokenizer import Tokenizer
 
-    code = "variable x = 10 + 5 variable y = x + 10 write \"Valor de y: \" write y"
+    code = "if 5 == 2 then variable x = 2 write x else write \"Não é igual\" end"
 
     tokenizer = Tokenizer(code)
     parser = Parser(tokenizer.tokens)

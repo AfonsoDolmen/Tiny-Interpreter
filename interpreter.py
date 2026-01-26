@@ -1,10 +1,15 @@
+from typing import List
+
 from nodes import (
+    Node,
     MainNode,
     Literal,
     Identifier,
     VariableDeclarationNode,
+    AssignmentNode,
     WriteStatementNode,
     BinaryOperationNode,
+    ConditionalStatementNode,
 )
 
 
@@ -13,18 +18,25 @@ class Interpreter:
         self.root = root
         self.env = {}
 
-    def execute(self):
+    def execute(self, root: List[Node] = None):
         """
         Executa a árvore de sintaxe abstrata (AST)
         """
-        for node in self.root.nodes:
+        root = root or self.root
+        nodes = getattr(root, 'nodes', root)
+
+        for node in nodes:
             # Verifica os tipo de nó
             if isinstance(node, VariableDeclarationNode):
                 self.declare_variable(node)
+            elif isinstance(node, AssignmentNode):
+                self.assignment_operation(node)
             elif isinstance(node, WriteStatementNode):
                 self.write_statement(node)
             elif isinstance(node, BinaryOperationNode):
                 self.operation_statement(node)
+            elif isinstance(node, ConditionalStatementNode):
+                self.conditional_statement(node)
 
     def declare_variable(self, node: VariableDeclarationNode):
         """
@@ -40,6 +52,18 @@ class Interpreter:
 
         # Realiza a atribuição de acordo com a expressão
         self.env[identifier.name] = self.evaluate(expression)
+
+    def assignment_operation(self, node: AssignmentNode):
+        """
+        Atribuição de valores
+        """
+        identifier = node.identifier.name
+        value = self.evaluate(node.expression)
+
+        if identifier not in self.env:
+            raise NameError(f'Variável \"{identifier}\" não declarada!')
+
+        self.env[identifier] = value
 
     def write_statement(self, node: WriteStatementNode):
         """
@@ -86,6 +110,33 @@ class Interpreter:
 
         return None
 
+    def conditional_statement(self, node: ConditionalStatementNode):
+        """
+        Executa bloco condicional simples (if/else)
+        """
+        left_expr = self.evaluate(node.left_expression)
+        operator = node.operator
+        right_expr = self.evaluate(node.right_expression)
+
+        # Operadores possíveis
+        operators = {
+            '==': lambda a, b: a == b,
+            '!=': lambda a, b: a != b,
+            '<=': lambda a, b: a <= b,
+            '>=': lambda a, b: a >= b,
+            '<': lambda a, b: a < b,
+            '>': lambda a, b: a > b,
+        }
+
+        if operator not in operators:
+            raise SyntaxError(f'Operador {operator} inválido!')
+
+        # Caso o operador seja correto, executa o bloco responsável
+        if operators[operator](left_expr, right_expr) and node.then_branch:
+            self.execute(node.then_branch)
+        else:
+            self.execute(node.else_branch)
+
 
 # DEBUG
 if __name__ == "__main__":
@@ -94,8 +145,14 @@ if __name__ == "__main__":
 
     code = """
     variable x = 10
-    write "Teste"
-    write 10 + 5 - 2 * 3
+    variable y = 10
+
+    write x
+    write y
+    
+    x = 10 + 10
+
+    if x == 20 then write "x é igual a 20" else write "x não é igual a 20" end
     """
 
     tokenizer = Tokenizer(code)

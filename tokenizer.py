@@ -3,12 +3,31 @@ import re
 
 # Definição dos tipos de tokens
 TOKEN_TYPE = {
+    # Keywords
     "VARIABLE": re.compile(r'variable', re.IGNORECASE),
     "WRITE": re.compile(r'write', re.IGNORECASE),
-    "OP": re.compile(r'op', re.IGNORECASE),
-    "NUMBER": re.compile(r'\d+'),
+    "IF": re.compile(r'if', re.IGNORECASE),
+    "THEN": re.compile(r'then', re.IGNORECASE),
+    "ELSE": re.compile(r'else', re.IGNORECASE),
+    "END": re.compile(r'end', re.IGNORECASE),
+
+    # Operadores de comparação
+    "EQ": re.compile(r'=='),
+    "NEQ": re.compile(r'!='),
+    "LTE": re.compile(r'<='),
+    "GTE": re.compile(r'>='),
+    "LT": re.compile(r'<'),
+    "GT": re.compile(r'>'),
+    "ASSIGN": re.compile(r'='),
+
+    # Literais
     "LITERAL": re.compile(r'"[^"]*"'),
-    "OPERATOR": re.compile(r'[+\-*/=]'),
+    "NUMBER": re.compile(r'\d+'),
+
+    # Operadores
+    "OPERATOR": re.compile(r'[+\-*/]'),
+
+    # Identificadores
     "IDENTIFIER": re.compile(r'[a-zA-Z_]\w*', re.IGNORECASE),
 }
 
@@ -25,6 +44,7 @@ class Token:
     type: str
     value: str
     position: int
+    end: int
 
 
 class Tokenizer:
@@ -58,7 +78,8 @@ class Tokenizer:
                 token = Token(
                     type=match.lastgroup,
                     value=match.group(match.lastgroup),
-                    position=match.start()
+                    position=match.start(),
+                    end=match.end(),
                 )
                 self.tokens.append(token)
 
@@ -68,7 +89,7 @@ class Tokenizer:
 
 # DEBUG
 if __name__ == "__main__":
-    code = "variable x = 10 op x + 10"
+    code = "if 2 == 5 then write \"Then Executado\" else write \"Else Executado!\" end"
     tokenizer = Tokenizer(code)
 
     print(30 * "=", "Código Fonte", 30 * "=")

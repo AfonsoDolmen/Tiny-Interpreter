@@ -9,8 +9,10 @@ O projeto implementa as principais etapas de um interpretador, incluindo:
 
 Atualmente, a linguagem permite:
 - Declaração de variáveis;
+- Atribuição de valores;
 - Impressão de valores literais ou armazenados em variáveis;
-- Operações aritméticas simples.
+- Operações aritméticas simples;
+- Estrutura condicional simples (if/else);
 
 --------------------------------------------------
 
@@ -32,17 +34,17 @@ Saída esperada: 10
 
 #### 1.2 Exemplo 2:
 ```text
-variable x = 5 + 5
-variable y = 10
-variable result = x * y
-write "O resultado de x * y: "
-write result
+variable a = 10
+variable b = 20
+
+variable result = a + 10
+
+if result == b then write "Variável result é igual b!" else write "Não são iguais" end
 ```
 ```text
 Saída esperada:
 
-O resultado de x * y:
-100
+Variável result é igual b!
 ```
 
 2. Execute o interpretador:
@@ -56,7 +58,7 @@ python main.py
 
 - Avaliação baseada em expressões; ✅
 - Precedência de operadores;
-- Estruturas condicionais simples e compostas (if / else if / else);
+- Estruturas condicionais simples e compostas (if / else if / else) - 50% implementado😅;
 - Refatoração e simplificação da AST; ✅
 - Melhor tratamento de erros sintáticos e semânticos;
 - Outros aprimoramentos conforme a evolução do projeto.
